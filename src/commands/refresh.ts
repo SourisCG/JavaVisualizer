@@ -1,12 +1,10 @@
 import * as vscode from 'vscode';
 import { getWebviewPanel } from '../webview/WebviewProvider';
-import { ProcessManager } from '../process/ProcessManager';
+import { getProcessManager, getWsBridge } from './preview';
 import { ProjectDetector } from '../process/ProjectDetector';
-
-let extensionContext: vscode.ExtensionContext | null = null;
+import { logger } from '../utils/logger';
 
 export function setContext(context: vscode.ExtensionContext) {
-    extensionContext = context;
 }
 
 export async function refreshPreview() {
@@ -22,18 +20,28 @@ export async function refreshPreview() {
         return;
     }
 
-    if (!extensionContext) {
-        vscode.window.showErrorMessage('Extension context not available.');
+    const processManager = getProcessManager();
+    const wsBridge = getWsBridge();
+
+    if (!processManager) {
+        vscode.window.showErrorMessage('ProcessManager not available. Please open the preview first.');
         return;
     }
 
+    if (!wsBridge) {
+        vscode.window.showErrorMessage('WebSocket bridge not available. Please open the preview first.');
+        return;
+    }
+
+    logger.info('Refreshing preview from command palette');
     panel.webview.postMessage({ type: 'setStatus', status: 'compiling', text: 'Compiling...' });
 
-    const processManager = new ProcessManager(extensionContext);
     const project = ProjectDetector.detect(workspaceFolder);
-    const result = await processManager.compileAndRun(project, true);
+    const wsPort = wsBridge.getPort();
+    const result = await processManager.compileAndRun(project, true, wsPort);
 
     if (!result.success) {
+        logger.error(`Refresh failed: ${result.errors.join('\n')}`);
         panel.webview.postMessage({
             type: 'showError',
             title: 'Compilation Error',
@@ -42,5 +50,7 @@ export async function refreshPreview() {
         return;
     }
 
+    logger.info('Refresh successful');
     panel.webview.postMessage({ type: 'hideError' });
+    panel.webview.postMessage({ type: 'connectWebSocket', port: wsPort });
 }

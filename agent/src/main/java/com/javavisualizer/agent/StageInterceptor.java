@@ -37,11 +37,21 @@ public class StageInterceptor {
                 if (scene != null) {
                     FrameCapture capture = new FrameCapture(scene, bridge);
                     capture.start();
+                    
+                    EventInjector injector = new EventInjector(scene);
+                    bridge.setEventInjector(injector);
+                    
+                    System.out.println("[JavaVisualizer] FrameCapture and EventInjector initialized");
                 } else {
                     fxStage.sceneProperty().addListener((obs, oldScene, newScene) -> {
                         if (newScene != null) {
                             FrameCapture capture = new FrameCapture(newScene, bridge);
                             capture.start();
+                            
+                            EventInjector injector = new EventInjector(newScene);
+                            bridge.setEventInjector(injector);
+                            
+                            System.out.println("[JavaVisualizer] FrameCapture and EventInjector initialized (delayed)");
                         }
                     });
                 }

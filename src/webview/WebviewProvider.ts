@@ -1,10 +1,16 @@
 import * as vscode from 'vscode';
 import { getWebviewContent } from './getWebviewContent';
+import { logger } from '../utils/logger';
 
 let currentPanel: vscode.WebviewPanel | null = null;
+let onDisposeCallback: (() => void) | null = null;
 
 export function getWebviewPanel(): vscode.WebviewPanel | null {
     return currentPanel;
+}
+
+export function setOnDispose(callback: () => void): void {
+    onDisposeCallback = callback;
 }
 
 export function createWebviewPanel(context: vscode.ExtensionContext): vscode.WebviewPanel {
@@ -29,7 +35,9 @@ export function createWebviewPanel(context: vscode.ExtensionContext): vscode.Web
     panel.webview.html = getWebviewContent(panel.webview);
 
     panel.onDidDispose(() => {
+        logger.info('Webview panel disposed');
         currentPanel = null;
+        onDisposeCallback?.();
     });
 
     currentPanel = panel;

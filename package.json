@@ -26,7 +26,6 @@
     "desktop",
     "ui"
   ],
-  "icon": "resources/icons/javavisualizer.png",
   "activationEvents": [
     "workspaceContains:**/*.java"
   ],

@@ -40,11 +40,18 @@ public class EventInjector {
                 };
 
                 if (eventType != null) {
+                    @SuppressWarnings("unchecked")
+                    Map<String, Boolean> modifiers = (Map<String, Boolean>) event.get("modifiers");
+                    boolean shift = modifiers != null && modifiers.getOrDefault("shift", false);
+                    boolean ctrl = modifiers != null && modifiers.getOrDefault("ctrl", false);
+                    boolean alt = modifiers != null && modifiers.getOrDefault("alt", false);
+                    boolean meta = modifiers != null && modifiers.getOrDefault("meta", false);
+
                     MouseEvent mouseEvent = new MouseEvent(
                             eventType,
                             x, y, x, y,
                             fxButton, 1,
-                            false, false, false, false,
+                            shift, ctrl, alt, meta,
                             false, false, false, false,
                             false, false, null
                     );

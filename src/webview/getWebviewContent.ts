@@ -1,18 +1,20 @@
 import * as vscode from 'vscode';
+import * as crypto from 'crypto';
+
+function getNonce(): string {
+    return crypto.randomBytes(16).toString('hex');
+}
 
 export function getWebviewContent(webview: vscode.Webview): string {
-    const codiconsUri = webview.asWebviewUri(
-        vscode.Uri.joinPath(
-            vscode.Uri.file((vscode.extensions.getExtension('vscode.codicons')?.extensionPath) || ''),
-            'dist', 'codicon.css'
-        )
-    );
+    const nonce = getNonce();
+    const cspSource = webview.cspSource;
 
     return `<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src ${cspSource} 'unsafe-inline'; script-src 'nonce-${nonce}'; img-src ${cspSource} blob: data:; connect-src ws://localhost:*; font-src ${cspSource};">
     <title>JavaVisualizer</title>
     <style>
         * {
@@ -308,8 +310,10 @@ export function getWebviewContent(webview: vscode.Webview): string {
         </div>
     </div>
 
-    <script>
+    <script nonce="${nonce}">
+        console.log('JavaVisualizer webview script loaded');
         const vscode = acquireVsCodeApi();
+        console.log('VS Code API acquired');
         const canvas = document.getElementById('preview-canvas');
         const ctx = canvas.getContext('2d');
         const btnRefresh = document.getElementById('btn-refresh');
@@ -369,6 +373,7 @@ export function getWebviewContent(webview: vscode.Webview): string {
             ws.binaryType = 'arraybuffer';
 
             ws.onopen = () => {
+                ws.send(JSON.stringify({ type: 'identify', role: 'webview' }));
                 setStatus('connected', 'Connected');
                 hideError();
                 emptyState.style.display = 'none';
@@ -387,10 +392,14 @@ export function getWebviewContent(webview: vscode.Webview): string {
                     };
                     img.src = url;
                 } else {
-                    const msg = JSON.parse(event.data);
-                    if (msg.type === 'resize') {
-                        canvas.width = msg.width;
-                        canvas.height = msg.height;
+                    try {
+                        const msg = JSON.parse(event.data);
+                        if (msg.type === 'resize') {
+                            canvas.width = msg.width;
+                            canvas.height = msg.height;
+                        }
+                    } catch (e) {
+                        console.error('Error parsing WebSocket message:', e);
                     }
                 }
             };
