@@ -1,0 +1,9 @@
+node_modules/
+dist/
+out/
+*.vsix
+.opencode/
+agent/build/
+agent/.gradle/
+resources/JavaVisualizerAgent.jar
+*.log
