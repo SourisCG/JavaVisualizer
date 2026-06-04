@@ -18,29 +18,29 @@ public class WebSocketBridge {
     private volatile boolean connected = false;
 
     public WebSocketBridge(int port) {
-        System.out.println("[JavaVisualizer] [WS] WebSocketBridge constructor called with port: " + port);
+        VisualizerAgent.log("[WS] WebSocketBridge constructor called with port: " + port);
         this.port = port;
     }
 
     public void start() {
-        System.out.println("[JavaVisualizer] [WS] start() called");
-        System.out.flush();
+        VisualizerAgent.log("[WS] start() called");
+        VisualizerAgent.flush();
         try {
             URI serverUri = new URI("ws://localhost:" + port);
-            System.out.println("[JavaVisualizer] [WS] Connecting to WebSocket server at " + serverUri);
-            System.out.flush();
+            VisualizerAgent.log("[WS] Connecting to WebSocket server at " + serverUri);
+            VisualizerAgent.flush();
 
             client = new WebSocketClient(serverUri) {
                 @Override
                 public void onOpen(ServerHandshake handshakedata) {
-                    System.out.println("[JavaVisualizer] [WS] Connected to WebSocket server");
-                    System.out.flush();
+                    VisualizerAgent.log("[WS] Connected to WebSocket server");
+                    VisualizerAgent.flush();
                     connected = true;
 
                     String identifyMessage = "{\"type\":\"identify\",\"role\":\"agent\"}";
                     send(identifyMessage);
-                    System.out.println("[JavaVisualizer] [WS] Sent identification message");
-                    System.out.flush();
+                    VisualizerAgent.log("[WS] Sent identification message");
+                    VisualizerAgent.flush();
                 }
 
                 @Override
@@ -61,34 +61,32 @@ public class WebSocketBridge {
                                 }
                             }
                         } else {
-                            System.err.println("[JavaVisualizer] [WS] EventInjector is null, cannot process event");
+                            VisualizerAgent.logError("[WS] EventInjector is null, cannot process event", null);
                         }
                     } catch (Exception e) {
-                        System.err.println("[JavaVisualizer] [WS] Error processing event: " + e.getMessage());
-                        e.printStackTrace();
+                        VisualizerAgent.logError("[WS] Error processing event", e);
                     }
                 }
 
                 @Override
                 public void onClose(int code, String reason, boolean remote) {
-                    System.out.println("[JavaVisualizer] [WS] Disconnected from WebSocket server: " + reason);
-                    System.out.flush();
+                    VisualizerAgent.log("[WS] Disconnected from WebSocket server: " + reason);
+                    VisualizerAgent.flush();
                     connected = false;
                 }
 
                 @Override
                 public void onError(Exception ex) {
-                    System.err.println("[JavaVisualizer] [WS] WebSocket error: " + ex.getMessage());
-                    ex.printStackTrace();
+                    VisualizerAgent.logError("[WS] WebSocket error", ex);
                 }
             };
 
-            System.out.println("[JavaVisualizer] [WS] Calling client.connect() (async)");
-            System.out.flush();
+            VisualizerAgent.log("[WS] Calling client.connect() (async)");
+            VisualizerAgent.flush();
             client.connect();
 
-            System.out.println("[JavaVisualizer] [WS] Waiting for connection (max 5s)...");
-            System.out.flush();
+            VisualizerAgent.log("[WS] Waiting for connection (max 5s)...");
+            VisualizerAgent.flush();
 
             int maxRetries = 50;
             int retryCount = 0;
@@ -96,20 +94,19 @@ public class WebSocketBridge {
                 Thread.sleep(100);
                 retryCount++;
                 if (retryCount % 10 == 0) {
-                    System.out.println("[JavaVisualizer] [WS] Still waiting... " + (retryCount * 100) + "ms");
+                    VisualizerAgent.log("[WS] Still waiting... " + (retryCount * 100) + "ms");
                 }
             }
 
             if (connected) {
-                System.out.println("[JavaVisualizer] [WS] Connection established after " + (retryCount * 100) + "ms");
+                VisualizerAgent.log("[WS] Connection established after " + (retryCount * 100) + "ms");
             } else {
-                System.err.println("[JavaVisualizer] [WS] Failed to connect to WebSocket server after " + maxRetries + " retries");
+                VisualizerAgent.logError("[WS] Failed to connect to WebSocket server after " + maxRetries + " retries", null);
             }
-            System.out.flush();
+            VisualizerAgent.flush();
 
         } catch (Exception e) {
-            System.err.println("[JavaVisualizer] [WS] Failed to start WebSocket client: " + e.getMessage());
-            e.printStackTrace();
+            VisualizerAgent.logError("[WS] Failed to start WebSocket client", e);
         }
     }
 
@@ -121,18 +118,18 @@ public class WebSocketBridge {
 
     public void setEventInjector(EventInjector injector) {
         this.eventInjector = injector;
-        System.out.println("[JavaVisualizer] [WS] EventInjector set");
-        System.out.flush();
+        VisualizerAgent.log("[WS] EventInjector set");
+        VisualizerAgent.flush();
     }
 
     public void stop() {
-        System.out.println("[JavaVisualizer] [WS] stop() called");
-        System.out.flush();
+        VisualizerAgent.log("[WS] stop() called");
+        VisualizerAgent.flush();
         if (client != null) {
             try {
                 client.close();
             } catch (Exception e) {
-                System.err.println("[JavaVisualizer] [WS] Error closing WebSocket client: " + e.getMessage());
+                VisualizerAgent.logError("[WS] Error closing WebSocket client", e);
             }
         }
     }

@@ -55,16 +55,22 @@ export class ProcessManager {
             mainClass
         ];
 
+        const fullCommand = `${javaExe} ${args.join(' ')}`;
         logger.info(`Launching Java process with agent`);
         logger.info(`  Java: ${javaExe}`);
+        logger.info(`  Agent JAR: ${this.agentJarPath}`);
+        logger.info(`  Agent JAR exists: ${require('fs').existsSync(this.agentJarPath)}`);
         logger.info(`  Main class: ${mainClass}`);
         logger.info(`  Classpath entries: ${classpath.split(path.delimiter).length}`);
         logger.info(`  WebSocket port: ${wsPort || 9876}`);
+        logger.info(`  FULL COMMAND: ${fullCommand}`);
+        logger.info(`  Working directory: ${project.rootPath}`);
 
         return new Promise((resolve) => {
             this.javaProcess = spawn(javaExe, args, {
                 cwd: project.rootPath,
-                detached: true
+                detached: true,
+                stdio: ['ignore', 'pipe', 'pipe']
             });
 
             let stderr = '';

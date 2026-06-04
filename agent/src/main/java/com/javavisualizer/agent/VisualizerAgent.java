@@ -1,98 +1,129 @@
 package com.javavisualizer.agent;
 
 import java.lang.instrument.Instrumentation;
+import java.io.FileWriter;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 
 public class VisualizerAgent {
 
     private static WebSocketBridge bridge;
+    private static final String LOG_FILE = "/tmp/javavisualizer-agent.log";
 
     static {
-        System.out.println("[JavaVisualizer] ========== AGENT CLASS LOADED ==========");
-        System.out.println("[JavaVisualizer] Classloader: " + VisualizerAgent.class.getClassLoader());
-        System.out.println("[JavaVisualizer] Thread: " + Thread.currentThread().getName());
+        log("========== AGENT CLASS LOADED ==========");
+        log("Classloader: " + VisualizerAgent.class.getClassLoader());
+        log("Thread: " + Thread.currentThread().getName());
     }
 
     public static void premain(String agentArgs, Instrumentation inst) {
-        System.out.println("[JavaVisualizer] ========== PREMAIN CALLED ==========");
-        System.out.println("[JavaVisualizer] agentArgs: " + agentArgs);
-        System.out.println("[JavaVisualizer] Instrumentation: " + (inst != null ? "available" : "NULL"));
-        System.out.flush();
+        log("========== PREMAIN CALLED ==========");
+        log("agentArgs: " + agentArgs);
+        log("Instrumentation: " + (inst != null ? "available" : "NULL"));
+        flush();
 
         try {
             initialize(agentArgs, inst);
         } catch (Throwable t) {
-            System.err.println("[JavaVisualizer] ========== PREMAIN FAILED ==========");
-            t.printStackTrace();
-            System.err.flush();
+            logError("========== PREMAIN FAILED ==========", t);
+            flush();
         }
     }
 
     public static void agentmain(String agentArgs, Instrumentation inst) {
-        System.out.println("[JavaVisualizer] ========== AGENTMAIN CALLED ==========");
-        System.out.flush();
+        log("========== AGENTMAIN CALLED ==========");
+        flush();
         try {
             initialize(agentArgs, inst);
         } catch (Throwable t) {
-            t.printStackTrace();
+            logError("========== AGENTMAIN FAILED ==========", t);
         }
     }
 
     private static void initialize(String agentArgs, Instrumentation inst) {
-        System.out.println("[JavaVisualizer] [INIT] Step 1: Parsing port");
-        System.out.flush();
+        log("[INIT] Step 1: Parsing port");
+        flush();
 
         int port = 9876;
         if (agentArgs != null && !agentArgs.isEmpty()) {
             try {
                 port = Integer.parseInt(agentArgs);
-                System.out.println("[JavaVisualizer] [INIT] Port parsed: " + port);
+                log("[INIT] Port parsed: " + port);
             } catch (NumberFormatException e) {
-                System.err.println("[JavaVisualizer] Invalid port argument: " + agentArgs + ", using default 9876");
+                logError("Invalid port argument: " + agentArgs + ", using default 9876", e);
             }
         } else {
-            System.out.println("[JavaVisualizer] [INIT] No agent args, using default port: " + port);
+            log("[INIT] No agent args, using default port: " + port);
         }
 
-        System.out.println("[JavaVisualizer] [INIT] Step 2: Creating WebSocketBridge");
-        System.out.flush();
+        log("[INIT] Step 2: Creating WebSocketBridge");
+        flush();
         try {
             bridge = new WebSocketBridge(port);
-            System.out.println("[JavaVisualizer] [INIT] WebSocketBridge created");
+            log("[INIT] WebSocketBridge created");
         } catch (Throwable t) {
-            System.err.println("[JavaVisualizer] [INIT] FAILED to create WebSocketBridge");
-            t.printStackTrace();
+            logError("[INIT] FAILED to create WebSocketBridge", t);
             return;
         }
 
-        System.out.println("[JavaVisualizer] [INIT] Step 3: Starting WebSocketBridge");
-        System.out.flush();
+        log("[INIT] Step 3: Starting WebSocketBridge");
+        flush();
         try {
             bridge.start();
-            System.out.println("[JavaVisualizer] [INIT] WebSocketBridge.start() returned");
+            log("[INIT] WebSocketBridge.start() returned");
         } catch (Throwable t) {
-            System.err.println("[JavaVisualizer] [INIT] FAILED to start WebSocketBridge");
-            t.printStackTrace();
+            logError("[INIT] FAILED to start WebSocketBridge", t);
         }
 
-        System.out.println("[JavaVisualizer] [INIT] Step 4: Installing StageInterceptor");
-        System.out.flush();
+        log("[INIT] Step 4: Installing StageInterceptor");
+        flush();
         try {
             StageInterceptor.install(inst, bridge);
-            System.out.println("[JavaVisualizer] [INIT] StageInterceptor.install() returned");
+            log("[INIT] StageInterceptor.install() returned");
         } catch (Throwable t) {
-            System.err.println("[JavaVisualizer] [INIT] FAILED to install StageInterceptor");
-            t.printStackTrace();
+            logError("[INIT] FAILED to install StageInterceptor", t);
         }
 
-        System.out.println("[JavaVisualizer] [INIT] Step 5: Adding shutdown hook");
+        log("[INIT] Step 5: Adding shutdown hook");
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            System.out.println("[JavaVisualizer] Shutdown hook triggered");
+            log("Shutdown hook triggered");
             if (bridge != null) {
                 bridge.stop();
             }
         }, "JavaVisualizer-ShutdownHook"));
 
-        System.out.println("[JavaVisualizer] ========== AGENT INITIALIZED ON PORT " + port + " ==========");
+        log("========== AGENT INITIALIZED ON PORT " + port + " ==========");
+        flush();
+    }
+
+    public static synchronized void log(String message) {
+        System.out.println("[JavaVisualizer] " + message);
+        try (FileWriter fw = new FileWriter(LOG_FILE, true)) {
+            fw.write("[" + System.currentTimeMillis() + "] " + message + "\n");
+        } catch (Exception e) {
+            // Ignore
+        }
+    }
+
+    public static synchronized void logError(String message, Throwable t) {
+        System.err.println("[JavaVisualizer] " + message);
+        if (t != null) {
+            t.printStackTrace();
+        }
+        try (FileWriter fw = new FileWriter(LOG_FILE, true)) {
+            fw.write("[" + System.currentTimeMillis() + "] ERROR: " + message + "\n");
+            StringWriter sw = new StringWriter();
+            if (t != null) {
+                t.printStackTrace(new PrintWriter(sw));
+                fw.write(sw.toString());
+            }
+        } catch (Exception e) {
+            // Ignore
+        }
+    }
+
+    public static void flush() {
         System.out.flush();
+        System.err.flush();
     }
 }

@@ -7,47 +7,44 @@ import net.bytebuddy.matcher.ElementMatchers;
 
 import java.lang.instrument.Instrumentation;
 import java.lang.reflect.Method;
-import java.security.ProtectionDomain;
 
 public class StageInterceptor {
 
     public static void install(Instrumentation inst, WebSocketBridge bridge) {
-        System.out.println("[JavaVisualizer] [STAGE] install() called");
-        System.out.println("[JavaVisualizer] [STAGE] Instrumentation: " + (inst != null ? "OK" : "NULL"));
-        System.out.println("[JavaVisualizer] [STAGE] Bridge: " + (bridge != null ? "OK" : "NULL"));
-        System.out.flush();
+        VisualizerAgent.log("[STAGE] install() called");
+        VisualizerAgent.log("[STAGE] Instrumentation: " + (inst != null ? "OK" : "NULL"));
+        VisualizerAgent.log("[STAGE] Bridge: " + (bridge != null ? "OK" : "NULL"));
+        VisualizerAgent.flush();
 
         try {
-            System.out.println("[JavaVisualizer] [STAGE] Building AgentBuilder...");
-            System.out.flush();
+            VisualizerAgent.log("[STAGE] Building AgentBuilder...");
+            VisualizerAgent.flush();
 
             new AgentBuilder.Default()
                     .with(AgentBuilder.RedefinitionStrategy.RETRANSFORMATION)
                     .with(AgentBuilder.Listener.StreamWriting.toSystemOut())
                     .type(ElementMatchers.named("javafx.stage.Stage"))
                     .transform((builder, typeDescription, classLoader, module, protectionDomain) -> {
-                        System.out.println("[JavaVisualizer] [STAGE] >>> TRANSFORMING STAGE CLASS <<<");
-                        System.out.println("[JavaVisualizer] [STAGE] ClassLoader: " + classLoader);
-                        System.out.println("[JavaVisualizer] [STAGE] Module: " + module);
-                        System.out.println("[JavaVisualizer] [STAGE] Type: " + typeDescription);
-                        System.out.flush();
+                        VisualizerAgent.log("[STAGE] >>> TRANSFORMING STAGE CLASS <<<");
+                        VisualizerAgent.log("[STAGE] ClassLoader: " + classLoader);
+                        VisualizerAgent.log("[STAGE] Module: " + module);
+                        VisualizerAgent.log("[STAGE] Type: " + typeDescription);
+                        VisualizerAgent.flush();
                         return builder.method(ElementMatchers.named("show"))
                                 .intercept(Advice.to(ShowAdvice.class));
                     })
                     .installOn(inst);
 
-            System.out.println("[JavaVisualizer] [STAGE] AgentBuilder installed");
-            System.out.flush();
+            VisualizerAgent.log("[STAGE] AgentBuilder installed");
+            VisualizerAgent.flush();
         } catch (Throwable t) {
-            System.err.println("[JavaVisualizer] [STAGE] EXCEPTION during install:");
-            t.printStackTrace();
-            System.err.flush();
+            VisualizerAgent.logError("[STAGE] EXCEPTION during install", t);
         }
 
         ShowAdvice.bridge = bridge;
-        System.out.println("[JavaVisualizer] [STAGE] ShowAdvice.bridge set");
-        System.out.println("[JavaVisualizer] [STAGE] install() COMPLETED");
-        System.out.flush();
+        VisualizerAgent.log("[STAGE] ShowAdvice.bridge set");
+        VisualizerAgent.log("[STAGE] install() COMPLETED");
+        VisualizerAgent.flush();
     }
 
     public static class ShowAdvice {
@@ -55,23 +52,23 @@ public class StageInterceptor {
 
         @Advice.OnMethodExit
         public static void onShow(@Advice.This Object stage) {
-            System.out.println("[JavaVisualizer] [ADVICE] >>> Stage.show() INTERCEPTED! <<<");
-            System.out.flush();
+            VisualizerAgent.log("[ADVICE] >>> Stage.show() INTERCEPTED! <<<");
+            VisualizerAgent.flush();
 
             WebSocketBridge currentBridge = bridge;
 
             try {
-                System.out.println("[JavaVisualizer] [ADVICE] Bridge: " + (currentBridge != null ? "OK" : "NULL"));
-                System.out.flush();
+                VisualizerAgent.log("[ADVICE] Bridge: " + (currentBridge != null ? "OK" : "NULL"));
+                VisualizerAgent.flush();
 
                 if (currentBridge == null) {
-                    System.err.println("[JavaVisualizer] [ADVICE] Bridge is null, cannot proceed");
+                    VisualizerAgent.logError("[ADVICE] Bridge is null, cannot proceed", null);
                     return;
                 }
 
                 Class<?> stageClass = stage.getClass();
-                System.out.println("[JavaVisualizer] [ADVICE] Stage class: " + stageClass.getName());
-                System.out.flush();
+                VisualizerAgent.log("[ADVICE] Stage class: " + stageClass.getName());
+                VisualizerAgent.flush();
 
                 Method setX = stageClass.getMethod("setX", double.class);
                 Method setY = stageClass.getMethod("setY", double.class);
@@ -79,32 +76,30 @@ public class StageInterceptor {
 
                 setX.invoke(stage, -10000.0);
                 setY.invoke(stage, -10000.0);
-                System.out.println("[JavaVisualizer] [ADVICE] Stage moved to (-10000, -10000)");
-                System.out.flush();
+                VisualizerAgent.log("[ADVICE] Stage moved to (-10000, -10000)");
+                VisualizerAgent.flush();
 
                 Object scene = getScene.invoke(stage);
-                System.out.println("[JavaVisualizer] [ADVICE] Scene: " + (scene != null ? scene.getClass().getName() : "null"));
-                System.out.flush();
+                VisualizerAgent.log("[ADVICE] Scene: " + (scene != null ? scene.getClass().getName() : "null"));
+                VisualizerAgent.flush();
 
                 if (scene != null) {
                     FrameCapture capture = new FrameCapture(scene, currentBridge);
                     capture.start();
-                    System.out.println("[JavaVisualizer] [ADVICE] FrameCapture created and started");
-                    System.out.flush();
+                    VisualizerAgent.log("[ADVICE] FrameCapture created and started");
+                    VisualizerAgent.flush();
 
                     EventInjector injector = new EventInjector(scene);
                     currentBridge.setEventInjector(injector);
-                    System.out.println("[JavaVisualizer] [ADVICE] EventInjector created and set");
-                    System.out.flush();
+                    VisualizerAgent.log("[ADVICE] EventInjector created and set");
+                    VisualizerAgent.flush();
                 } else {
-                    System.out.println("[JavaVisualizer] [ADVICE] Scene is null, will not capture frames");
-                    System.out.flush();
+                    VisualizerAgent.log("[ADVICE] Scene is null, will not capture frames");
+                    VisualizerAgent.flush();
                 }
 
             } catch (Throwable t) {
-                System.err.println("[JavaVisualizer] [ADVICE] ERROR: " + t.getClass().getName() + ": " + t.getMessage());
-                t.printStackTrace();
-                System.err.flush();
+                VisualizerAgent.logError("[ADVICE] ERROR", t);
             }
         }
     }
