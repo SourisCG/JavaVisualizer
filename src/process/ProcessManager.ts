@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
+import * as fs from 'fs';
 import { spawn, ChildProcess, execSync } from 'child_process';
 import { ProjectInfo } from './ProjectDetector';
 import { JavaCompiler } from './JavaCompiler';
@@ -59,7 +60,7 @@ export class ProcessManager {
         logger.info(`Launching Java process with agent`);
         logger.info(`  Java: ${javaExe}`);
         logger.info(`  Agent JAR: ${this.agentJarPath}`);
-        logger.info(`  Agent JAR exists: ${require('fs').existsSync(this.agentJarPath)}`);
+        logger.info(`  Agent JAR exists: ${fs.existsSync(this.agentJarPath)}`);
         logger.info(`  Main class: ${mainClass}`);
         logger.info(`  Classpath entries: ${classpath.split(path.delimiter).length}`);
         logger.info(`  WebSocket port: ${wsPort || 9876}`);

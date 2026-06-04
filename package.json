@@ -5,6 +5,7 @@
   "version": "0.0.1",
   "publisher": "SourisCG",
   "license": "MIT",
+  "icon": "resources/icons/icon.png",
   "repository": {
     "type": "git",
     "url": "https://github.com/SourisCG/JavaVisualizer"
@@ -27,6 +28,9 @@
     "ui"
   ],
   "activationEvents": [
+    "onCommand:javavisualizer.openPreview",
+    "onCommand:javavisualizer.refresh",
+    "onCommand:javavisualizer.runDesktop",
     "workspaceContains:**/*.java"
   ],
   "main": "./dist/extension.js",

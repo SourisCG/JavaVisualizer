@@ -2,9 +2,55 @@ package com.javavisualizer.agent;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
+import java.util.HashMap;
 import java.util.Map;
 
 public class EventInjector {
+
+    private static final Map<String, String> JS_TO_JAVAFX_KEY;
+
+    static {
+        JS_TO_JAVAFX_KEY = new HashMap<>();
+        JS_TO_JAVAFX_KEY.put("Backquote", "BACK_QUOTE");
+        JS_TO_JAVAFX_KEY.put("Backslash", "BACK_SLASH");
+        JS_TO_JAVAFX_KEY.put("BracketLeft", "OPEN_BRACKET");
+        JS_TO_JAVAFX_KEY.put("BracketRight", "CLOSE_BRACKET");
+        JS_TO_JAVAFX_KEY.put("Comma", "COMMA");
+        JS_TO_JAVAFX_KEY.put("Equal", "EQUALS");
+        JS_TO_JAVAFX_KEY.put("Minus", "MINUS");
+        JS_TO_JAVAFX_KEY.put("Period", "PERIOD");
+        JS_TO_JAVAFX_KEY.put("Quote", "QUOTE");
+        JS_TO_JAVAFX_KEY.put("Semicolon", "SEMICOLON");
+        JS_TO_JAVAFX_KEY.put("Slash", "SLASH");
+        JS_TO_JAVAFX_KEY.put("Space", "SPACE");
+        JS_TO_JAVAFX_KEY.put("Tab", "TAB");
+        JS_TO_JAVAFX_KEY.put("Enter", "ENTER");
+        JS_TO_JAVAFX_KEY.put("Escape", "ESCAPE");
+        JS_TO_JAVAFX_KEY.put("Backspace", "BACK_SPACE");
+        JS_TO_JAVAFX_KEY.put("Delete", "DELETE");
+        JS_TO_JAVAFX_KEY.put("Insert", "INSERT");
+        JS_TO_JAVAFX_KEY.put("Home", "HOME");
+        JS_TO_JAVAFX_KEY.put("End", "END");
+        JS_TO_JAVAFX_KEY.put("PageUp", "PAGE_UP");
+        JS_TO_JAVAFX_KEY.put("PageDown", "PAGE_DOWN");
+        JS_TO_JAVAFX_KEY.put("CapsLock", "CAPS");
+        JS_TO_JAVAFX_KEY.put("NumLock", "NUM_LOCK");
+        JS_TO_JAVAFX_KEY.put("ScrollLock", "SCROLL_LOCK");
+        JS_TO_JAVAFX_KEY.put("PrintScreen", "PRINTSCREEN");
+        JS_TO_JAVAFX_KEY.put("Pause", "PAUSE");
+        JS_TO_JAVAFX_KEY.put("ArrowUp", "UP");
+        JS_TO_JAVAFX_KEY.put("ArrowDown", "DOWN");
+        JS_TO_JAVAFX_KEY.put("ArrowLeft", "LEFT");
+        JS_TO_JAVAFX_KEY.put("ArrowRight", "RIGHT");
+        JS_TO_JAVAFX_KEY.put("ShiftLeft", "SHIFT");
+        JS_TO_JAVAFX_KEY.put("ShiftRight", "SHIFT");
+        JS_TO_JAVAFX_KEY.put("ControlLeft", "CONTROL");
+        JS_TO_JAVAFX_KEY.put("ControlRight", "CONTROL");
+        JS_TO_JAVAFX_KEY.put("AltLeft", "ALT");
+        JS_TO_JAVAFX_KEY.put("AltRight", "ALT");
+        JS_TO_JAVAFX_KEY.put("MetaLeft", "META");
+        JS_TO_JAVAFX_KEY.put("MetaRight", "META");
+    }
 
     private final Object scene;
     private ClassLoader classLoader;
@@ -71,8 +117,9 @@ public class EventInjector {
                         Object root = getRootMethod.invoke(scene);
 
                         Class<?> eventClass = Class.forName("javafx.event.Event", true, classLoader);
+                        Class<?> eventTargetClass = Class.forName("javafx.event.EventTarget", true, classLoader);
                         Method fireEventMethod = eventClass.getMethod("fireEvent",
-                            Class.forName("javafx.scene.Node", true, classLoader), eventClass);
+                            eventTargetClass, eventClass);
                         fireEventMethod.invoke(null, root, mouseEvent);
                     }
                 } catch (Exception e) {
@@ -129,8 +176,9 @@ public class EventInjector {
                     Object root = getRootMethod.invoke(scene);
 
                     Class<?> eventClass = Class.forName("javafx.event.Event", true, classLoader);
+                    Class<?> eventTargetClass = Class.forName("javafx.event.EventTarget", true, classLoader);
                     Method fireEventMethod = eventClass.getMethod("fireEvent",
-                        Class.forName("javafx.scene.Node", true, classLoader), eventClass);
+                        eventTargetClass, eventClass);
                     fireEventMethod.invoke(null, root, scrollEvent);
                 } catch (Exception e) {
                     System.err.println("[JavaVisualizer] Scroll event injection error: " + e.getMessage());
@@ -157,8 +205,9 @@ public class EventInjector {
                     Class<?> keyCodeClass = Class.forName("javafx.scene.input.KeyCode", true, classLoader);
                     Object keyCode;
                     try {
+                        String javaCode = mapJsCodeToJavaFx(code);
                         Method valueOfMethod = keyCodeClass.getMethod("valueOf", String.class);
-                        keyCode = valueOfMethod.invoke(null, code.toUpperCase().replace("KEY", "").replace("DIGIT", "").replace("ARROW", ""));
+                        keyCode = valueOfMethod.invoke(null, javaCode);
                     } catch (Exception e) {
                         keyCode = keyCodeClass.getField("UNDEFINED").get(null);
                     }
@@ -199,17 +248,34 @@ public class EventInjector {
                     Object root = getRootMethod.invoke(scene);
 
                     Class<?> eventClass = Class.forName("javafx.event.Event", true, classLoader);
+                    Class<?> eventTargetClass = Class.forName("javafx.event.EventTarget", true, classLoader);
                     Method fireEventMethod = eventClass.getMethod("fireEvent",
-                        Class.forName("javafx.scene.Node", true, classLoader), eventClass);
+                        eventTargetClass, eventClass);
                     fireEventMethod.invoke(null, root, keyEvent);
                 } catch (Exception e) {
                     System.err.println("[JavaVisualizer] Key event injection error: " + e.getMessage());
                     e.printStackTrace();
                 }
             });
-        } catch (Exception e) {
+            } catch (Exception e) {
             System.err.println("[JavaVisualizer] Key event scheduling error: " + e.getMessage());
             e.printStackTrace();
         }
+    }
+
+    private static String mapJsCodeToJavaFx(String jsCode) {
+        if (jsCode == null) return "UNDEFINED";
+
+        String direct = JS_TO_JAVAFX_KEY.get(jsCode);
+        if (direct != null) return direct;
+
+        String upper = jsCode.toUpperCase();
+
+        if (upper.startsWith("KEY")) return upper.substring(3);
+        if (upper.startsWith("DIGIT")) return upper.substring(5);
+        if (upper.startsWith("ARROW")) return upper.substring(5);
+        if (upper.startsWith("NUMPAD")) return upper;
+
+        return upper;
     }
 }

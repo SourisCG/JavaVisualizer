@@ -50,7 +50,7 @@ public class StageInterceptor {
     public static class ShowAdvice {
         public static volatile WebSocketBridge bridge;
 
-        @Advice.OnMethodExit
+        @Advice.OnMethodEnter
         public static void onShow(@Advice.This Object stage) {
             VisualizerAgent.log("[ADVICE] >>> Stage.show() INTERCEPTED! <<<");
             VisualizerAgent.flush();
@@ -70,13 +70,15 @@ public class StageInterceptor {
                 VisualizerAgent.log("[ADVICE] Stage class: " + stageClass.getName());
                 VisualizerAgent.flush();
 
+                Method setOpacity = stageClass.getMethod("setOpacity", double.class);
                 Method setX = stageClass.getMethod("setX", double.class);
                 Method setY = stageClass.getMethod("setY", double.class);
                 Method getScene = stageClass.getMethod("getScene");
 
+                setOpacity.invoke(stage, 0.0);
                 setX.invoke(stage, -10000.0);
                 setY.invoke(stage, -10000.0);
-                VisualizerAgent.log("[ADVICE] Stage moved to (-10000, -10000)");
+                VisualizerAgent.log("[ADVICE] Stage opacity=0, moved to (-10000, -10000)");
                 VisualizerAgent.flush();
 
                 Object scene = getScene.invoke(stage);

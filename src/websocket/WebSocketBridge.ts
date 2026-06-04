@@ -15,6 +15,8 @@ export interface EventMessage {
     code?: string;
     deltaX?: number;
     deltaY?: number;
+    frameRate?: number;
+    jpegQuality?: number;
     modifiers?: {
         shift: boolean;
         ctrl: boolean;

@@ -194,25 +194,25 @@ function setupFileWatcher(context: vscode.ExtensionContext) {
 
     fileWatcher = vscode.workspace.createFileSystemWatcher('**/src/**/*.java');
 
-    const debouncedRefresh = () => {
+    const onFileChange = () => {
         const settings = getSettings();
         if (!settings.autoReload) {
             return;
         }
-        
+
         if (debounceTimer) {
             clearTimeout(debounceTimer);
         }
-        
+
         debounceTimer = setTimeout(async () => {
             logger.info('File change detected, triggering refresh');
             await refreshPreviewInternal();
         }, 500);
     };
 
-    fileWatcher.onDidChange(debouncedRefresh);
-    fileWatcher.onDidCreate(debouncedRefresh);
-    fileWatcher.onDidDelete(debouncedRefresh);
+    fileWatcher.onDidChange(onFileChange);
+    fileWatcher.onDidCreate(onFileChange);
+    fileWatcher.onDidDelete(onFileChange);
 
     context.subscriptions.push(fileWatcher);
 }
@@ -242,10 +242,6 @@ async function refreshPreviewInternal() {
     }
 
     await compileAndLaunch(workspaceFolder, panel);
-    
-    if (wsBridge) {
-        panel.webview.postMessage({ type: 'connectWebSocket', port: wsBridge.getPort() });
-    }
 }
 
 async function runDesktopInternal() {
@@ -260,10 +256,10 @@ async function runDesktopInternal() {
     }
 
     const project = ProjectDetector.detect(workspaceFolder);
-    const compileResult = await processManager.runDesktop(project);
+    const result = await processManager.compileAndRun(project, false);
     
-    if (!compileResult.success) {
-        vscode.window.showErrorMessage(`Failed to run: ${compileResult.errors.join('\n')}`);
+    if (!result.success) {
+        vscode.window.showErrorMessage(`Failed to run: ${result.errors.join('\n')}`);
     } else {
         vscode.window.showInformationMessage('Java application launched on desktop.');
     }

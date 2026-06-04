@@ -1,5 +1,9 @@
 package com.javavisualizer.agent;
 
+import net.bytebuddy.ByteBuddy;
+import net.bytebuddy.implementation.InvocationHandlerAdapter;
+import net.bytebuddy.matcher.ElementMatchers;
+
 import javax.imageio.IIOImage;
 import javax.imageio.ImageIO;
 import javax.imageio.ImageWriteParam;
@@ -27,22 +31,25 @@ public class FrameCapture {
     public void start() {
         try {
             Class<?> animationTimerClass = Class.forName("javafx.animation.AnimationTimer");
-            Object timerInstance = java.lang.reflect.Proxy.newProxyInstance(
-                scene.getClass().getClassLoader(),
-                new Class<?>[]{animationTimerClass},
-                (proxy, method, args) -> {
-                    if ("handle".equals(method.getName()) && args.length == 1) {
-                        long now = (Long) args[0];
-                        long elapsed = now - lastFrameTime;
-                        if (elapsed < 1_000_000_000L / TARGET_FPS) {
-                            return null;
-                        }
-                        lastFrameTime = now;
-                        captureAndSend();
+
+            Class<?> concreteClass = new ByteBuddy()
+                .subclass(animationTimerClass)
+                .method(ElementMatchers.named("handle").and(ElementMatchers.takesArguments(long.class)))
+                .intercept(InvocationHandlerAdapter.of((proxy, method, args) -> {
+                    long now = (Long) args[0];
+                    long elapsed = now - lastFrameTime;
+                    if (elapsed < 1_000_000_000L / TARGET_FPS) {
+                        return null;
                     }
+                    lastFrameTime = now;
+                    captureAndSend();
                     return null;
-                }
-            );
+                }))
+                .make()
+                .load(scene.getClass().getClassLoader())
+                .getLoaded();
+
+            Object timerInstance = concreteClass.getDeclaredConstructor().newInstance();
 
             Method startMethod = animationTimerClass.getMethod("start");
             startMethod.invoke(timerInstance);
@@ -57,44 +64,58 @@ public class FrameCapture {
 
     private void captureAndSend() {
         try {
-            Class<?> platformClass = Class.forName("javafx.application.Platform");
-            Method runLaterMethod = platformClass.getMethod("runLater", Runnable.class);
+            Class<?> sceneClass = scene.getClass();
 
-            runLaterMethod.invoke(null, (Runnable) () -> {
-                try {
-                    Class<?> sceneClass = scene.getClass();
-                    Method snapshotMethod = sceneClass.getMethod("snapshot", Class.forName("javafx.scene.SnapshotParameters"));
-                    Object snapshot = snapshotMethod.invoke(scene, new Object[]{null});
+            Method getRootMethod = sceneClass.getMethod("getRoot");
+            Object root = getRootMethod.invoke(scene);
 
-                    Class<?> swingFXUtilsClass = Class.forName("javafx.embed.swing.SwingFXUtils");
-                    Method fromFXImageMethod = swingFXUtilsClass.getMethod("fromFXImage",
-                        Class.forName("javafx.scene.image.Image"), BufferedImage.class);
-                    BufferedImage bufferedImage = (BufferedImage) fromFXImageMethod.invoke(null, snapshot, null);
+            Class<?> writableImageClass = Class.forName("javafx.scene.image.WritableImage");
+            Class<?> snapshotParamsClass = Class.forName("javafx.scene.SnapshotParameters");
 
-                    ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                    Iterator<ImageWriter> writers = ImageIO.getImageWritersByFormatName("jpeg");
-                    if (writers.hasNext()) {
-                        ImageWriter writer = writers.next();
-                        ImageWriteParam param = writer.getDefaultWriteParam();
-                        param.setCompressionMode(ImageWriteParam.MODE_EXPLICIT);
-                        param.setCompressionQuality(JPEG_QUALITY);
+            Method getWidthMethod = sceneClass.getMethod("getWidth");
+            Method getHeightMethod = sceneClass.getMethod("getHeight");
+            double w = (double) getWidthMethod.invoke(scene);
+            double h = (double) getHeightMethod.invoke(scene);
 
-                        try (ImageOutputStream ios = ImageIO.createImageOutputStream(baos)) {
-                            writer.setOutput(ios);
-                            writer.write(null, new IIOImage(bufferedImage, null, null), param);
-                        }
-                        writer.dispose();
-                    }
+            if (w <= 0 || h <= 0) return;
 
-                    byte[] frameData = baos.toByteArray();
-                    bridge.sendFrame(frameData);
-                } catch (Exception e) {
-                    System.err.println("[JavaVisualizer] Frame capture error: " + e.getMessage());
+            Object writableImage = writableImageClass.getConstructor(int.class, int.class)
+                .newInstance((int) w, (int) h);
+
+            Method snapshotMethod = root.getClass().getMethod("snapshot", snapshotParamsClass,
+                Class.forName("javafx.scene.image.WritableImage"));
+            snapshotMethod.invoke(root, null, writableImage);
+
+            Class<?> swingFXUtilsClass = Class.forName("javafx.embed.swing.SwingFXUtils");
+            Method fromFXImageMethod = swingFXUtilsClass.getMethod("fromFXImage",
+                Class.forName("javafx.scene.image.Image"), BufferedImage.class);
+            BufferedImage fxImage = (BufferedImage) fromFXImageMethod.invoke(null, writableImage, null);
+
+            BufferedImage rgbImage = new BufferedImage(
+                fxImage.getWidth(), fxImage.getHeight(), BufferedImage.TYPE_INT_RGB);
+            java.awt.Graphics2D g = rgbImage.createGraphics();
+            g.drawImage(fxImage, 0, 0, null);
+            g.dispose();
+
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            Iterator<ImageWriter> writers = ImageIO.getImageWritersByFormatName("jpeg");
+            if (writers.hasNext()) {
+                ImageWriter writer = writers.next();
+                ImageWriteParam param = writer.getDefaultWriteParam();
+                param.setCompressionMode(ImageWriteParam.MODE_EXPLICIT);
+                param.setCompressionQuality(JPEG_QUALITY);
+
+                try (ImageOutputStream ios = ImageIO.createImageOutputStream(baos)) {
+                    writer.setOutput(ios);
+                    writer.write(null, new IIOImage(rgbImage, null, null), param);
                 }
-            });
+                writer.dispose();
+            }
+
+            byte[] frameData = baos.toByteArray();
+            bridge.sendFrame(frameData);
         } catch (Exception e) {
-            System.err.println("[JavaVisualizer] Capture scheduling error: " + e.getMessage());
-            e.printStackTrace();
+            System.err.println("[JavaVisualizer] Frame capture error: " + e.getMessage());
         }
     }
 
