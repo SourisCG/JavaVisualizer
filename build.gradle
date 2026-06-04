@@ -1,0 +1,55 @@
+plugins {
+    id 'application'
+    id 'org.openjfx.javafxplugin' version '0.1.0'
+    id 'com.github.johnrengelman.shadow' version '8.1.1'
+}
+
+group = 'com.javafxpreview'
+version = '1.0.0'
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
+}
+
+repositories {
+    mavenCentral()
+}
+
+javafx {
+    version = '21'
+    modules = ['javafx.controls', 'javafx.fxml']
+}
+
+application {
+    mainClass = 'com.javafxpreview.Main'
+    mainModule = 'javafx.preview'
+}
+
+dependencies {
+}
+
+shadowJar {
+    archiveBaseName.set('javafx-live-preview')
+    archiveClassifier.set('')
+    archiveVersion.set('')
+    mergeServiceFiles()
+}
+
+tasks.register('buildRpm', Exec) {
+    dependsOn shadowJar
+    workingDir = file('build/libs')
+    commandLine = [
+        'jpackage',
+        '--type', 'rpm',
+        '--name', 'javafx-live-preview',
+        '--app-version', '1.0.0',
+        '--input', '.',
+        '--main-jar', 'javafx-live-preview.jar',
+        '--main-class', 'com.javafxpreview.Main',
+        '--icon', file('src/main/resources/icons/icon.png').absolutePath,
+        '--linux-package-name', 'javafx-live-preview',
+        '--linux-shortcut',
+        '--linux-app-category', 'Development'
+    ]
+}
