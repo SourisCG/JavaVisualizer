@@ -36,6 +36,24 @@ shadowJar {
     mergeServiceFiles()
 }
 
+tasks.register('buildExe', Exec) {
+    dependsOn shadowJar
+    doFirst {
+        delete file('build/distributions/JavaVisualizer')
+    }
+    workingDir = file('build/libs')
+    commandLine = [
+        'jpackage',
+        '--type', 'app-image',
+        '--name', 'JavaVisualizer',
+        '--app-version', '1.0.0',
+        '--input', '.',
+        '--main-jar', 'javafx-live-preview.jar',
+        '--main-class', 'com.javafxpreview.Main',
+        '--dest', '../distributions'
+    ]
+}
+
 tasks.register('buildRpm', Exec) {
     dependsOn shadowJar
     workingDir = file('build/libs')
