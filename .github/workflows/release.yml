@@ -220,7 +220,6 @@ jobs:
             artifacts/linux-deb/*.tar.gz
             artifacts/linux-rpm/*.rpm
             artifacts/macos-arm64-dmg/*.dmg
-            artifacts/macos-x64-dmg/*.dmg
             artifacts/windows-installers/*.msi
             artifacts/windows-installers/*.exe
           generate_release_notes: true

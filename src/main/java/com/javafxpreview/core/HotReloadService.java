@@ -89,6 +89,17 @@ public class HotReloadService {
             if (e instanceof ClassNotFoundException || e.getCause() instanceof ClassNotFoundException) {
                 String msg = e.getMessage() != null ? e.getMessage() : String.valueOf(e.getCause());
                 onWarning.accept("No controller: " + msg + " — UI only mode");
+                FXMLLoader fallbackLoader = new FXMLLoader(currentFxml.toURI().toURL());
+                if (projectClassLoader != null) fallbackLoader.setClassLoader(projectClassLoader);
+                fallbackLoader.setControllerFactory(classId -> null);
+                try {
+                    Parent root = fallbackLoader.load();
+                    onRootLoaded.accept(root);
+                    reloadCss();
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                    onError.accept("Failed to load FXML: " + ex.getMessage());
+                }
                 return;
             }
             throw e;
@@ -97,6 +108,7 @@ public class HotReloadService {
 
     private void reloadCss() throws MalformedURLException {
         List<String> urls = new ArrayList<>();
+        urls.add("Modena");
         for (String path : cssPaths) {
             urls.add(new File(path).toURI().toURL().toExternalForm());
         }
@@ -112,6 +124,6 @@ public class HotReloadService {
         try { scene.getStylesheets().add(cssFile.toURI().toURL().toExternalForm()); } catch (MalformedURLException ignored) {}
     }
 
-    public void clearStylesheets() { cssPaths.clear(); scene.getStylesheets().clear(); }
+    public void clearStylesheets() { cssPaths.clear(); scene.getStylesheets().setAll("Modena"); }
     public File getCurrentFxml() { return currentFxml; }
 }

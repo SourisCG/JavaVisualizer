@@ -23,7 +23,6 @@ javafx {
 
 application {
     mainClass = 'com.javafxpreview.Main'
-    mainModule = 'javafx.preview'
 }
 
 dependencies {
