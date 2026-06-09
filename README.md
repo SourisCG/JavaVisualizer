@@ -29,10 +29,11 @@ Pick your platform:
 |----------|----------|
 | **Windows** | [![.exe](https://img.shields.io/badge/Download-.exe-blue?style=flat-square)](https://github.com/SourisCG/JavaVisualizer/releases/latest/download/JavaFXLivePreview-windows-x64.exe) [![.msi](https://img.shields.io/badge/Download-.msi-blue?style=flat-square)](https://github.com/SourisCG/JavaVisualizer/releases/latest/download/JavaFXLivePreview-windows-x64.msi) |
 | **macOS (Apple Silicon)** | [![.dmg](https://img.shields.io/badge/Download-.dmg-lightgrey?style=flat-square)](https://github.com/SourisCG/JavaVisualizer/releases/latest/download/JavaFXLivePreview-macos-arm64.dmg) |
-| **macOS (Intel)** | [![.dmg](https://img.shields.io/badge/Download-.dmg-lightgrey?style=flat-square)](https://github.com/SourisCG/JavaVisualizer/releases/latest/download/JavaFXLivePreview-macos-x64.dmg) |
 | **Linux (Debian/Ubuntu)** | [![.deb](https://img.shields.io/badge/Download-.deb-orange?style=flat-square)](https://github.com/SourisCG/JavaVisualizer/releases/latest/download/JavaFXLivePreview-linux-amd64.deb) |
 | **Linux (Fedora/RHEL)** | [![.rpm](https://img.shields.io/badge/Download-.rpm-orange?style=flat-square)](https://github.com/SourisCG/JavaVisualizer/releases/latest/download/JavaFXLivePreview-linux-x86_64.rpm) |
 | **Linux (any distro)** | [![.tar.gz](https://img.shields.io/badge/Download-.tar.gz-orange?style=flat-square)](https://github.com/SourisCG/JavaVisualizer/releases/latest/download/JavaFXLivePreview-linux-x64.tar.gz) |
+
+> **macOS Intel users:** Download the Apple Silicon version and run it with Rosetta 2 (enabled by default on macOS).
 
 Then install it:
 
