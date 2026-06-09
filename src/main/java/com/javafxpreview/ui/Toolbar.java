@@ -49,6 +49,7 @@ public class Toolbar extends HBox {
         fxmlCombo.setOnAction(e -> {
             String selected = fxmlCombo.getValue();
             if (selected != null && onFxmlSelect != null) {
+                @SuppressWarnings("unchecked")
                 String filePath = fxmlCombo.getUserData() instanceof java.util.Map
                     ? ((java.util.Map<String, String>) fxmlCombo.getUserData()).get(selected)
                     : null;
@@ -99,7 +100,10 @@ public class Toolbar extends HBox {
         FileChooser chooser = new FileChooser();
         chooser.setTitle("Open FXML File");
         chooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("FXML Files", "*.fxml"));
-        chooser.setInitialDirectory(new File(AppSettings.getLastDirectory()));
+        File dir = new File(AppSettings.getLastDirectory());
+        if (dir.exists() && dir.isDirectory()) {
+            chooser.setInitialDirectory(dir);
+        }
         File file = chooser.showOpenDialog(getScene().getWindow());
         if (file != null) {
             AppSettings.setLastDirectory(file.getParent());

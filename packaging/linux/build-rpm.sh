@@ -16,5 +16,5 @@ jpackage \
     --linux-shortcut \
     --linux-app-category Development \
     --dest build/dist
-echo "=== RPM built in build/dist ==="
+echo "=== RPM built ==="
 ls -la build/dist/
