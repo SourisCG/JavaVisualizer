@@ -5,3 +5,5 @@ build/
 /tmp/
 *.iml
 .idea/
+*.icns
+*.ico

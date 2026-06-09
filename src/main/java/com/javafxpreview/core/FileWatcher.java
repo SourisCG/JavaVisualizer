@@ -2,13 +2,12 @@ package com.javafxpreview.core;
 
 import java.io.File;
 import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 
-public class FxmlWatcher {
+public class FileWatcher {
 
     private Thread pollThread;
     private volatile boolean running = false;
@@ -17,41 +16,35 @@ public class FxmlWatcher {
     private final Consumer<Path> onCssChange;
     private final Map<String, Long> timestamps = new HashMap<>();
     private File currentFxml;
-    private List<File> cssFiles = new ArrayList<>();
+    private List<File> cssFiles;
 
-    public FxmlWatcher(Consumer<Path> onFxmlChange, Consumer<Path> onCssChange) {
+    public FileWatcher(Consumer<Path> onFxmlChange, Consumer<Path> onCssChange) {
         this.onFxmlChange = onFxmlChange;
         this.onCssChange = onCssChange;
     }
 
-    public void setAutoReload(boolean value) { this.autoReload = value; }
-    public boolean isAutoReload() { return autoReload; }
+    public void setAutoReload(boolean value) {
+        this.autoReload = value;
+    }
 
-    public void setCurrentFxml(File f) { this.currentFxml = f; }
-    public void setCssFiles(List<File> files) { this.cssFiles = files; }
-
-    public void watch(File rootDir) {
+    public void watch(File rootDir, File fxml, List<File> css) {
         stop();
+        this.currentFxml = fxml;
+        this.cssFiles = css;
 
-        // Seed timestamps
         timestamps.clear();
         scanTimestamps(rootDir);
-        if (currentFxml != null) timestamps.put(currentFxml.getAbsolutePath(), currentFxml.lastModified());
-        for (File f : cssFiles) timestamps.put(f.getAbsolutePath(), f.lastModified());
 
         running = true;
-        System.out.println("[Watcher] Polling started for: " + rootDir);
-
         pollThread = new Thread(() -> {
             while (running) {
                 try { Thread.sleep(500); } catch (InterruptedException e) { break; }
+                if (!autoReload) continue;
                 poll();
             }
-            System.out.println("[Watcher] Polling stopped");
-        }, "FxmlWatcher-Poll");
+        }, "FileWatcher");
         pollThread.setDaemon(true);
         pollThread.start();
-        System.out.println("[Watcher] Poll thread alive: " + pollThread.isAlive());
     }
 
     private void poll() {
@@ -59,33 +52,26 @@ public class FxmlWatcher {
             if (currentFxml != null && currentFxml.exists()) {
                 long mod = currentFxml.lastModified();
                 Long prev = timestamps.get(currentFxml.getAbsolutePath());
-                System.out.println("[Watcher] Poll FXML: mod=" + mod + " prev=" + (prev != null ? prev : "null")
-                    + " changed=" + (prev != null && mod > prev));
                 if (prev != null && mod > prev) {
-                    System.out.println("[Watcher] FXML changed: " + currentFxml);
                     timestamps.put(currentFxml.getAbsolutePath(), mod);
                     onFxmlChange.accept(currentFxml.toPath());
                     return;
                 }
                 timestamps.put(currentFxml.getAbsolutePath(), mod);
-            } else {
-                System.out.println("[Watcher] Poll FXML: currentFxml="
-                    + (currentFxml != null ? currentFxml.getAbsolutePath() : "null")
-                    + " exists=" + (currentFxml != null && currentFxml.exists())
-                    + " autoReload=" + autoReload);
             }
 
-            for (File css : cssFiles) {
-                if (!css.exists()) continue;
-                long mod = css.lastModified();
-                Long prev = timestamps.get(css.getAbsolutePath());
-                if (prev != null && mod > prev) {
-                    System.out.println("[Watcher] CSS changed: " + css);
+            if (cssFiles != null) {
+                for (File css : cssFiles) {
+                    if (!css.exists()) continue;
+                    long mod = css.lastModified();
+                    Long prev = timestamps.get(css.getAbsolutePath());
+                    if (prev != null && mod > prev) {
+                        timestamps.put(css.getAbsolutePath(), mod);
+                        onCssChange.accept(css.toPath());
+                        return;
+                    }
                     timestamps.put(css.getAbsolutePath(), mod);
-                    onCssChange.accept(css.toPath());
-                    return;
                 }
-                timestamps.put(css.getAbsolutePath(), mod);
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -105,8 +91,9 @@ public class FxmlWatcher {
     }
 
     private boolean shouldSkip(String name) {
-        return name.startsWith(".") || name.equals("target") || name.equals("build")
-            || name.equals("node_modules") || name.equals(".gradle") || name.equals("__pycache__");
+        String lower = name.toLowerCase();
+        return lower.startsWith(".") || lower.equals("target") || lower.equals("build")
+            || lower.equals("node_modules") || lower.equals(".gradle");
     }
 
     public void stop() {
@@ -117,4 +104,3 @@ public class FxmlWatcher {
         }
     }
 }
-

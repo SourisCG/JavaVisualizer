@@ -23,7 +23,6 @@ javafx {
 
 application {
     mainClass = 'com.javafxpreview.Main'
-    mainModule = 'javafx.preview'
 }
 
 dependencies {
@@ -50,24 +49,27 @@ tasks.register('buildExe', Exec) {
         '--input', '.',
         '--main-jar', 'javafx-live-preview.jar',
         '--main-class', 'com.javafxpreview.Main',
+        '--icon', file('src/main/resources/icons/icon.png').absolutePath,
         '--dest', '../distributions'
     ]
 }
 
-tasks.register('buildRpm', Exec) {
-    dependsOn shadowJar
-    workingDir = file('build/libs')
-    commandLine = [
-        'jpackage',
-        '--type', 'rpm',
-        '--name', 'javafx-live-preview',
-        '--app-version', '1.0.0',
-        '--input', '.',
-        '--main-jar', 'javafx-live-preview.jar',
-        '--main-class', 'com.javafxpreview.Main',
-        '--icon', file('src/main/resources/icons/icon.png').absolutePath,
-        '--linux-package-name', 'javafx-live-preview',
-        '--linux-shortcut',
-        '--linux-app-category', 'Development'
-    ]
+if (org.gradle.internal.os.OperatingSystem.current().isLinux()) {
+    tasks.register('buildRpm', Exec) {
+        dependsOn shadowJar
+        workingDir = file('build/libs')
+        commandLine = [
+            'jpackage',
+            '--type', 'rpm',
+            '--name', 'javafx-live-preview',
+            '--app-version', '1.0.0',
+            '--input', '.',
+            '--main-jar', 'javafx-live-preview.jar',
+            '--main-class', 'com.javafxpreview.Main',
+            '--icon', file('src/main/resources/icons/icon.png').absolutePath,
+            '--linux-package-name', 'javafx-live-preview',
+            '--linux-shortcut',
+            '--linux-app-category', 'Development'
+        ]
+    }
 }
