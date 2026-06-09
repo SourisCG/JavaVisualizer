@@ -36,33 +36,69 @@ Requires **JDK 17 or newer**. JavaFX is bundled in the JAR.
 | **Linux (Fedora/RHEL)** | [![.rpm](https://img.shields.io/badge/Download-.rpm-orange?style=flat-square)](https://github.com/SourisCG/JavaVisualizer/releases/latest/download/JavaFXLivePreview-linux-x86_64.rpm) |
 | **Linux (any distro)** | [![.tar.gz](https://img.shields.io/badge/Download-.tar.gz-orange?style=flat-square)](https://github.com/SourisCG/JavaVisualizer/releases/latest/download/JavaFXLivePreview-linux-x64.tar.gz) |
 
-### Installation Notes
+### Installation
 
-**Windows**  
-Double-click the `.exe` or `.msi` installer. No admin rights required.
+Pick your favorite way to install:
 
-**macOS**  
-Open the `.dmg` and drag the app to Applications.  
-⚠️ **First launch**: macOS will show "App is damaged" or "Cannot be opened". This is normal for unsigned apps.  
-**Fix**: Right-click the app → Open → Click "Open" in the dialog. You only need to do this once.
-
-**Linux (Debian/Ubuntu)**  
-```bash
-sudo apt install ./JavaFXLivePreview-linux-amd64.deb
+#### Windows
+**Option A: One-liner (PowerShell)**
+```powershell
+irm https://github.com/SourisCG/JavaVisualizer/releases/latest/download/JavaFXLivePreview-windows-x64.exe | iex
 ```
 
-**Linux (Fedora/RHEL)**  
+**Option B: Download & double-click**
+1. Download the [.exe](https://github.com/SourisCG/JavaVisualizer/releases/latest/download/JavaFXLivePreview-windows-x64.exe) or [.msi](https://github.com/SourisCG/JavaVisualizer/releases/latest/download/JavaFXLivePreview-windows-x64.msi) installer
+2. Double-click it
+3. Done! No admin rights required.
+
+#### macOS
+**Option A: One-liner (Terminal)**
 ```bash
-sudo dnf install ./JavaFXLivePreview-linux-x86_64.rpm
+curl -L https://github.com/SourisCG/JavaVisualizer/releases/latest/download/JavaFXLivePreview-macos-arm64.dmg -o ~/Downloads/JavaFXLivePreview.dmg && open ~/Downloads/JavaFXLivePreview.dmg
 ```
 
-**Linux (any distro)**  
+**Option B: Download & drag**
+1. Download the [.dmg](https://github.com/SourisCG/JavaVisualizer/releases/latest/download/JavaFXLivePreview-macos-arm64.dmg) (Apple Silicon) or [.dmg](https://github.com/SourisCG/JavaVisualizer/releases/latest/download/JavaFXLivePreview-macos-x64.dmg) (Intel)
+2. Open it and drag to Applications
+3. **First launch**: Right-click the app → Open → Click "Open" (this is normal for unsigned apps, you only need to do this once)
+
+#### Linux (Debian/Ubuntu)
+**Option A: One-liner**
 ```bash
-tar -xzf JavaFXLivePreview-linux-x64.tar.gz
-./JavaFXLivePreview/bin/javafx-live-preview
+curl -L https://github.com/SourisCG/JavaVisualizer/releases/latest/download/JavaFXLivePreview-linux-amd64.deb -o /tmp/javafx.deb && sudo apt install -y /tmp/javafx.deb
 ```
 
-**Note**: All Linux packages require Java 17+ (installed automatically on Debian/Ubuntu/Fedora).
+**Option B: Download & install**
+1. Download the [.deb](https://github.com/SourisCG/JavaVisualizer/releases/latest/download/JavaFXLivePreview-linux-amd64.deb) file
+2. Double-click it or run `sudo apt install ./JavaFXLivePreview-linux-amd64.deb`
+
+#### Linux (Fedora/RHEL)
+**Option A: One-liner**
+```bash
+curl -L https://github.com/SourisCG/JavaVisualizer/releases/latest/download/JavaFXLivePreview-linux-x86_64.rpm -o /tmp/javafx.rpm && sudo dnf install -y /tmp/javafx.rpm
+```
+
+**Option B: Download & install**
+1. Download the [.rpm](https://github.com/SourisCG/JavaVisualizer/releases/latest/download/JavaFXLivePreview-linux-x86_64.rpm) file
+2. Run `sudo dnf install ./JavaFXLivePreview-linux-x86_64.rpm`
+
+#### Linux (Any distro - Portable)
+**One-liner:**
+```bash
+curl -L https://github.com/SourisCG/JavaVisualizer/releases/latest/download/JavaFXLivePreview-linux-x64.tar.gz | tar xz && ./JavaFXLivePreview/bin/javafx-live-preview
+```
+
+**Or download & extract:**
+1. Download the [.tar.gz](https://github.com/SourisCG/JavaVisualizer/releases/latest/download/JavaFXLivePreview-linux-x64.tar.gz)
+2. Extract it
+3. Run `./JavaFXLivePreview/bin/javafx-live-preview`
+
+---
+
+**Notes:**
+- All Linux packages automatically install Java 17+ if needed
+- macOS users: The "app is damaged" warning is normal for unsigned apps. Just right-click → Open once.
+- Windows: No admin rights required
 
 ## 🔧 Build from source
 

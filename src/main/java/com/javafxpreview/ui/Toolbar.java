@@ -117,9 +117,8 @@ public class Toolbar extends HBox {
         customW.setVisible(isCustom);
         customH.setVisible(isCustom);
         if (onViewportChange != null) {
-            int w = 0, h = 0;
+            int w = 0;
             try { w = Integer.parseInt(customW.getText()); } catch (NumberFormatException ignored) {}
-            try { h = Integer.parseInt(customH.getText()); } catch (NumberFormatException ignored) {}
             onViewportChange.accept(preset, isCustom ? w : 0);
         }
     }
