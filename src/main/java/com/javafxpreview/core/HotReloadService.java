@@ -60,15 +60,13 @@ public class HotReloadService {
         reloadFxml();
     }
 
-    public void onFxmlChanged(Path path) {
+    public void onFxmlChangedDirect(Path path) {
         if (currentFxml == null) return;
         File changed = path.toFile();
-        if (changed.getName().endsWith(".fxml")) currentFxml = changed;
+        if (changed.getName().toLowerCase().endsWith(".fxml")) currentFxml = changed;
         refreshClassLoader();
-        Platform.runLater(() -> {
-            try { reloadFxml(); onSuccess.run(); }
-            catch (Exception e) { e.printStackTrace(); onError.accept("FXML reload error: " + e.getMessage()); }
-        });
+        try { reloadFxml(); onSuccess.run(); }
+        catch (Exception e) { e.printStackTrace(); onError.accept("FXML reload error: " + e.getMessage()); }
     }
 
     public void onCssChanged(Path path) {
@@ -91,6 +89,7 @@ public class HotReloadService {
             if (e instanceof ClassNotFoundException || e.getCause() instanceof ClassNotFoundException) {
                 String msg = e.getMessage() != null ? e.getMessage() : String.valueOf(e.getCause());
                 onWarning.accept("No controller: " + msg + " — UI only mode");
+                return;
             }
             throw e;
         }

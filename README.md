@@ -27,10 +27,42 @@ Requires **JDK 17 or newer**. JavaFX is bundled in the JAR.
 
 ## 📥 Download
 
-| Platform | Format |
-|----------|--------|
-| Any (portable) | [javafx-live-preview.jar](https://github.com/SourisCG/JavaVisualizer/releases/latest) |
-| Fedora / RHEL | `.rpm` (see [packaging](packaging/linux/)) |
+| Platform | |
+|----------|-|
+| **Windows** | [![.exe](https://img.shields.io/badge/Download-.exe-blue?style=flat-square)](https://github.com/SourisCG/JavaVisualizer/releases/latest/download/JavaFXLivePreview-windows-x64.exe) [![.msi](https://img.shields.io/badge/Download-.msi-blue?style=flat-square)](https://github.com/SourisCG/JavaVisualizer/releases/latest/download/JavaFXLivePreview-windows-x64.msi) |
+| **macOS (Apple Silicon)** | [![.dmg](https://img.shields.io/badge/Download-.dmg-lightgrey?style=flat-square)](https://github.com/SourisCG/JavaVisualizer/releases/latest/download/JavaFXLivePreview-macos-arm64.dmg) |
+| **macOS (Intel)** | [![.dmg](https://img.shields.io/badge/Download-.dmg-lightgrey?style=flat-square)](https://github.com/SourisCG/JavaVisualizer/releases/latest/download/JavaFXLivePreview-macos-x64.dmg) |
+| **Linux (Debian/Ubuntu)** | [![.deb](https://img.shields.io/badge/Download-.deb-orange?style=flat-square)](https://github.com/SourisCG/JavaVisualizer/releases/latest/download/JavaFXLivePreview-linux-amd64.deb) |
+| **Linux (Fedora/RHEL)** | [![.rpm](https://img.shields.io/badge/Download-.rpm-orange?style=flat-square)](https://github.com/SourisCG/JavaVisualizer/releases/latest/download/JavaFXLivePreview-linux-x86_64.rpm) |
+| **Linux (any distro)** | [![.tar.gz](https://img.shields.io/badge/Download-.tar.gz-orange?style=flat-square)](https://github.com/SourisCG/JavaVisualizer/releases/latest/download/JavaFXLivePreview-linux-x64.tar.gz) |
+
+### Installation Notes
+
+**Windows**  
+Double-click the `.exe` or `.msi` installer. No admin rights required.
+
+**macOS**  
+Open the `.dmg` and drag the app to Applications.  
+⚠️ **First launch**: macOS will show "App is damaged" or "Cannot be opened". This is normal for unsigned apps.  
+**Fix**: Right-click the app → Open → Click "Open" in the dialog. You only need to do this once.
+
+**Linux (Debian/Ubuntu)**  
+```bash
+sudo apt install ./JavaFXLivePreview-linux-amd64.deb
+```
+
+**Linux (Fedora/RHEL)**  
+```bash
+sudo dnf install ./JavaFXLivePreview-linux-x86_64.rpm
+```
+
+**Linux (any distro)**  
+```bash
+tar -xzf JavaFXLivePreview-linux-x64.tar.gz
+./JavaFXLivePreview/bin/javafx-live-preview
+```
+
+**Note**: All Linux packages require Java 17+ (installed automatically on Debian/Ubuntu/Fedora).
 
 ## 🔧 Build from source
 
@@ -103,13 +135,13 @@ User saves file ──► Polling watcher (every 500ms)
 ./gradlew shadowJar
 
 # RPM (Fedora/RHEL)
-./gradlew buildRpm
+./packaging/linux/build-rpm.sh
 
-# Windows EXE (requires WIX Toolset)
-jpackage --type exe --name "JavaFX Live Preview" ...
-
-# macOS DMG
+# macOS DMG (generates .icns automatically)
 ./packaging/macos/build-dmg.sh
+
+# Windows MSI + EXE (requires WIX Toolset + ImageMagick for .ico)
+powershell -File packaging/windows/build-exe.ps1
 ```
 
 See `packaging/` for detailed instructions per platform.

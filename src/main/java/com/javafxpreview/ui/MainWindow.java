@@ -9,7 +9,6 @@ import com.javafxpreview.core.HotReloadService;
 import com.javafxpreview.core.ViewportManager;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.*;
 
 public class MainWindow {
@@ -116,8 +115,8 @@ public class MainWindow {
             watcher = new FxmlWatcher(
                 path -> {
                     System.out.println("[Watcher] FXML change: " + path);
-                    reloadService.onFxmlChanged(path);
                     javafx.application.Platform.runLater(() -> {
+                        reloadService.onFxmlChangedDirect(path);
                         scanFxmlFiles(projectRoot, fxmlFiles);
                         updateFxmlList(fxmlFile.getName());
                     });
@@ -181,7 +180,7 @@ public class MainWindow {
             String name = f.getName();
             if (f.isDirectory() && !name.startsWith(".") && !name.equals("target") && !name.equals("build")) {
                 scanFxmlFiles(f, result);
-            } else if (name.endsWith(".fxml")) {
+            } else if (name.toLowerCase().endsWith(".fxml")) {
                 result.add(f);
             }
         }
@@ -190,9 +189,15 @@ public class MainWindow {
     private File detectProjectRoot(File fxmlFile) {
         File dir = fxmlFile.getParentFile();
         while (dir != null) {
-            if (new File(dir, "src").exists()) return dir;
-            if (new File(dir, "pom.xml").exists()) return dir;
-            if (new File(dir, "build.gradle").exists()) return dir;
+            File[] children = dir.listFiles();
+            if (children != null) {
+                for (File child : children) {
+                    String n = child.getName().toLowerCase();
+                    if (n.equals("src") && child.isDirectory()) return dir;
+                    if (n.equals("pom.xml")) return dir;
+                    if (n.equals("build.gradle") || n.equals("build.gradle.kts")) return dir;
+                }
+            }
             dir = dir.getParentFile();
         }
         return fxmlFile.getParentFile();
@@ -200,14 +205,20 @@ public class MainWindow {
 
     private File[] detectClasspath(File projectRoot) {
         List<File> dirs = new ArrayList<>();
-        File mavenClasses = new File(projectRoot, "target/classes");
-        if (mavenClasses.exists()) dirs.add(mavenClasses);
-        File gradleClasses = new File(projectRoot, "build/classes/java/main");
-        if (gradleClasses.exists()) dirs.add(gradleClasses);
-        File gradleResources = new File(projectRoot, "build/resources/main");
-        if (gradleResources.exists()) dirs.add(gradleResources);
-        File plainBin = new File(projectRoot, "bin");
-        if (plainBin.exists()) dirs.add(plainBin);
+        String[] paths = {
+            "target/classes",
+            "build/classes/java/main",
+            "build/classes/kotlin/main",
+            "build/classes/main",
+            "build/resources/main",
+            "out/production/classes",
+            "out/production/resources",
+            "bin"
+        };
+        for (String p : paths) {
+            File d = new File(projectRoot, p);
+            if (d.exists()) dirs.add(d);
+        }
         if (dirs.isEmpty()) dirs.add(projectRoot);
         return dirs.toArray(new File[0]);
     }
@@ -225,7 +236,7 @@ public class MainWindow {
             String name = f.getName();
             if (f.isDirectory() && !name.startsWith(".") && !name.equals("target") && !name.equals("build")) {
                 findCssRecursive(f, result);
-            } else if (name.endsWith(".css")) {
+            } else if (name.toLowerCase().endsWith(".css")) {
                 result.add(f);
             }
         }
