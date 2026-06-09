@@ -1,9 +1,9 @@
-# 🎨 JavaFX Live Preview
+# JavaFX Live Preview
 
 > Edit your FXML and CSSFX — see changes **instantly**.  
 > No compilation, no waiting. Just save and watch.
 
-## ✨ What it does
+## What it does
 
 - Open any `.fxml` file
 - **Hot-reload FXML** — save → reloads instantly
@@ -13,7 +13,7 @@
 - **Auto-reload toggle** — one click to pause/resume watching
 - **Error overlay** — shows load errors with a clear red banner
 
-## 🚀 Quick Start
+## Quick Start
 
 ```bash
 # Open a specific FXML
@@ -25,7 +25,7 @@ java -jar javafx-live-preview.jar
 
 Requires **JDK 17 or newer**. JavaFX is bundled in the JAR.
 
-## 📥 Download
+## Download
 
 | Platform | |
 |----------|-|
@@ -100,7 +100,7 @@ curl -L https://github.com/SourisCG/JavaVisualizer/releases/latest/download/Java
 - macOS users: The "app is damaged" warning is normal for unsigned apps. Just right-click → Open once.
 - Windows: No admin rights required
 
-## 🔧 Build from source
+## Build from source
 
 ```bash
 git clone https://github.com/SourisCG/JavaVisualizer.git
@@ -109,7 +109,7 @@ cd JavaVisualizer
 # Output: build/libs/javafx-live-preview.jar
 ```
 
-## 🎮 Usage
+## Usage
 
 ```
 ┌──────────────────────────────────────────────────────────────────┐
@@ -127,7 +127,7 @@ cd JavaVisualizer
 4. **Viewport** — simulate different screen sizes
 5. **Status** — green dot = OK, red = error
 
-## 📁 Supported project types
+## Supported project types
 
 Works with any JavaFX project structure:
 
@@ -142,7 +142,7 @@ The app auto-discovers:
 - All `.css` files (applied to the scene)
 - Classpath (`target/classes`, `build/classes`, `bin`) for controllers
 
-## 🏗️ How it works
+## How it works
 
 ```
 User saves file ──► Polling watcher (every 500ms)
@@ -164,7 +164,7 @@ User saves file ──► Polling watcher (every 500ms)
 - **No WebSocket / agent** — it's a single JavaFX app
 - **No inotify** — uses polling (works everywhere)
 
-## 🛠️ Packaging
+## Packaging
 
 ```bash
 # Fat JAR (any OS)
@@ -182,10 +182,10 @@ powershell -File packaging/windows/build-exe.ps1
 
 See `packaging/` for detailed instructions per platform.
 
-## 📄 License
+## License
 
 MIT — do whatever you want with it.
 
 ---
 
-Made with ☕ in JavaFX
+Made with JavaFX
