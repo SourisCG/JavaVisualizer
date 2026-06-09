@@ -1,7 +1,5 @@
 package com.javafxpreview.core;
 
-import javafx.scene.Scene;
-
 public class ViewportManager {
 
     public enum Preset {
