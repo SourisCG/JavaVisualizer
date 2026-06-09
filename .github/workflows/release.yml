@@ -251,7 +251,7 @@ jobs:
             build/dist/*.exe
 
   release:
-    needs: [build-linux-deb, build-linux-rpm, build-macos-arm64, build-macos-x64, build-windows]
+    needs: [build-linux-deb, build-linux-rpm, build-macos-arm64, build-windows]
     runs-on: ubuntu-latest
     steps:
       - name: Download all artifacts
