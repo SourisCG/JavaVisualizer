@@ -43,21 +43,14 @@ Double-click the installer. No admin rights needed.
 Open the `.dmg` and drag the app to Applications.  
 *First time opening it?* Right-click the app, select "Open", then click "Open" again. You'll only need to do this once — it's just macOS being cautious about unsigned apps.
 
-**Linux (Debian/Ubuntu)**
-```bash
-sudo apt install ./JavaFXLivePreview-linux-amd64.deb
-```
+**Linux (Debian/Ubuntu)**  
+Double-click the downloaded `.deb` file. Your package manager will open and guide you through the installation.
 
-**Linux (Fedora/RHEL)**
-```bash
-sudo dnf install ./JavaFXLivePreview-linux-x86_64.rpm
-```
+**Linux (Fedora/RHEL)**  
+Double-click the downloaded `.rpm` file. Your package manager will open and guide you through the installation.
 
-**Linux (any distro)**
-```bash
-tar -xzf JavaFXLivePreview-linux-x64.tar.gz
-./JavaFXLivePreview/bin/javafx-live-preview
-```
+**Linux (any distro)**  
+Extract the `.tar.gz` and run `./JavaFXLivePreview/bin/javafx-live-preview` from the extracted folder.
 
 > **Note:** Linux packages automatically install Java 17+ if you don't have it.
 
