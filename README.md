@@ -100,7 +100,7 @@ curl -L https://github.com/SourisCG/JavaVisualizer/releases/latest/download/Java
 - macOS users: The "app is damaged" warning is normal for unsigned apps. Just right-click → Open once.
 - Windows: No admin rights required
 
-## 🔧 Build from source
+## Build from source
 
 ```bash
 git clone https://github.com/SourisCG/JavaVisualizer.git
@@ -109,7 +109,7 @@ cd JavaVisualizer
 # Output: build/libs/javafx-live-preview.jar
 ```
 
-## 🎮 Usage
+## Usage
 
 ```
 ┌──────────────────────────────────────────────────────────────────┐
